@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 import joblib
@@ -7,8 +6,10 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
+    average_precision_score,
     classification_report,
     confusion_matrix,
+    roc_auc_score,
 )
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -35,12 +36,13 @@ COLUMNS = ["id", "diagnosis"] + FEATURES
 
 
 def main():
+    if not RAW_DATA_PATH.exists():
+        raise FileNotFoundError(f"Dataset not found: {RAW_DATA_PATH}")
+
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Load the original, unscaled dataset.
     df = pd.read_csv(RAW_DATA_PATH, header=None, names=COLUMNS)
 
-    # Validate the dataset before training.
     if df.isnull().values.any():
         raise ValueError("Dataset contains missing values.")
 
@@ -50,7 +52,9 @@ def main():
     if y.isnull().any():
         raise ValueError("Dataset contains unexpected diagnosis labels.")
 
-    # Keep the same deterministic, stratified split.
+    if not X.apply(pd.to_numeric, errors="coerce").notna().all().all():
+        raise ValueError("Dataset contains non-numeric feature values.")
+
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
@@ -59,7 +63,6 @@ def main():
         stratify=y,
     )
 
-    # Scaling is fitted on training data only.
     pipeline = Pipeline([
         ("scaler", StandardScaler()),
         ("classifier", LogisticRegression(
@@ -69,14 +72,23 @@ def main():
     ])
 
     pipeline.fit(X_train, y_train)
+
     y_pred = pipeline.predict(X_test)
+    y_scores = pipeline.predict_proba(X_test)[:, 1]
 
     accuracy = accuracy_score(y_test, y_pred)
+    roc_auc = roc_auc_score(y_test, y_scores)
+    average_precision = average_precision_score(y_test, y_scores)
 
-    print("Pipeline training completed.")
+    print("=" * 55)
+    print("BREAST CANCER CLASSIFICATION — MODEL EVALUATION")
+    print("=" * 55)
     print(f"Training records: {len(X_train)}")
-    print(f"Test records: {len(X_test)}")
-    print(f"\nTest accuracy: {accuracy:.4f} ({accuracy * 100:.2f}%)")
+    print(f"Test records:     {len(X_test)}")
+
+    print(f"\nAccuracy:          {accuracy:.4f} ({accuracy:.2%})")
+    print(f"ROC-AUC:           {roc_auc:.4f}")
+    print(f"Average precision: {average_precision:.4f}")
 
     print("\nClassification report:")
     print(classification_report(
@@ -87,11 +99,13 @@ def main():
         zero_division=0,
     ))
 
-    print("\nConfusion matrix:")
+    print("Confusion matrix (rows=true, columns=predicted):")
     print(confusion_matrix(y_test, y_pred, labels=[0, 1]))
 
+    # Save the pipeline only after evaluation completes.
     joblib.dump(pipeline, MODEL_PATH)
     print(f"\nPipeline saved to: {MODEL_PATH}")
+    print("\nEducational research only — not for medical diagnosis.")
 
 
 if __name__ == "__main__":

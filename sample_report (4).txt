@@ -1,0 +1,34 @@
+SYNTHETIC TEST REPORT — NOT REAL PATIENT DATA
+Purpose: Software testing only. Values are illustrative and not clinically meaningful.
+Do not use the model output for medical decisions.
+
+radius_mean: 14.0
+texture_mean: 20.0
+perimeter_mean: 90.0
+area_mean: 600.0
+smoothness_mean: 0.1
+compactness_mean: 0.1
+concavity_mean: 0.08
+concave_points_mean: 0.04
+symmetry_mean: 0.18
+fractal_dimension_mean: 0.06
+radius_se: 0.3
+texture_se: 1.0
+perimeter_se: 2.0
+area_se: 25.0
+smoothness_se: 0.006
+compactness_se: 0.02
+concavity_se: 0.02
+concave_points_se: 0.01
+symmetry_se: 0.02
+fractal_dimension_se: 0.003
+radius_worst: 16.0
+texture_worst: 25.0
+perimeter_worst: 105.0
+area_worst: 800.0
+smoothness_worst: 0.13
+compactness_worst: 0.25
+concavity_worst: 0.2
+concave_points_worst: 0.08
+symmetry_worst: 0.28
+fractal_dimension_worst: 0.08
